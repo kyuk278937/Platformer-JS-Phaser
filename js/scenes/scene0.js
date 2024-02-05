@@ -172,6 +172,8 @@ export default class scene0 extends Phaser.Scene {
 
         if(this.keySpace.isDown && this.player.body.touching.down){
             this.player.setVelocityY(-300);
+            let jumpSound= this.sound.add('jumpSound')
+            jumpSound.play();
             this.anim = 3;
             if(this.playerGoingRight){
                 this.player.play("playerJumpAnim");
@@ -198,6 +200,7 @@ export default class scene0 extends Phaser.Scene {
         this.load.audio('catCuteSound3','././assets/cat3.mp3');
         this.load.audio('catCuteSound4','././assets/cat4.mp3');
         this.load.audio('catCuteSound5','././assets/cat5.mp3');
+        this.load.audio('jumpSound','././assets/jump_sound.mp3');
     }
 
     create(){
