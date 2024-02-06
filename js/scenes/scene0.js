@@ -22,11 +22,13 @@ export default class scene0 extends Phaser.Scene {
         this.plants;
 
         this.ladder;
+        this.OnLadder = false;
 
         this.player;
         this.playerWasX = 0;
         this.playerScale = 2.5;
         this.playerGoingRight = true;
+        this.playerOnLadder = false;
 
         this.sky;
         this.skyWidth = 96;
@@ -47,6 +49,7 @@ export default class scene0 extends Phaser.Scene {
     createPlayer(x,y){
         this.player = this.physics.add.sprite(x,y,'playerIdle').setScale(this.playerScale);
         this.player.setBounce(0.2);
+        this.player.setDepth(10);
         this.player.body.collideWorldBounds = true;
 
         this.anims.create({
@@ -114,16 +117,85 @@ export default class scene0 extends Phaser.Scene {
 
         this.ladder.create(x,y-36*(1+len),'world',51).setScale(scale);
     }
+    ladderController(){
+        this.playerOnLadder = this.OnLadder;
+        
+        if(this.playerOnLadder){
+            this.player.body.gravity.y = -500;
+            this.player.setBounce(0);
+        }else{
+            this.player.body.gravity.y = 0;
+            this.player.setBounce(0.2);
+        }
+    }
+    onLadder(){
+        this.OnLadder = true;
+    }
 
+    createSky(){
+        this.sky = this.physics.add.staticGroup();
+        this.sky.create(0,300,'sky').setScale(this.skyScale);
+    }
     skysController(){
         if(this.player.x>=this.SCENE_WIDTH/4 && this.player.x<=this.WORLD_WIDTH-this.SCENE_WIDTH/4){
             this.skyPosX += (this.player.x - this.playerWasX)/3;
         }
         this.sky.setX(this.skyPosX);
+        if(this.player.y<=450){
+            this.sky.setY((this.player.y+450)/3);
+        }
         this.playerWasX = this.player.x;
     }
 
+    createPlants(){
+        this.plants = this.physics.add.staticGroup();
+        this.plants.imovableY = true;
+
+        this.plants.create(326,552,'world',125).setScale(2).setDepth(1);
+        this.plants.create(396,351,'world',127).setScale(2).setDepth(1);
+        this.plants.create(294,555,'world',124).setScale(2).setDepth(11);
+    }
+
+    addColliders(){
+        this.physics.add.collider(this.player, this.platforms);
+        this.physics.add.overlap(this.player, this.ladder,this.onLadder,null,this);
+    }
+
+    inizializeKeys(){
+        this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+        this.keyShift = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        this.keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        this.keyAlt = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ALT);
+    }
+
+    inizializeCatCuteSound(){
+        let catCuteSound1 = this.sound.add('catCuteSound1');
+        let catCuteSound2 = this.sound.add('catCuteSound2');
+        let catCuteSound3 = this.sound.add('catCuteSound3');
+        let catCuteSound4 = this.sound.add('catCuteSound4');
+        let catCuteSound5 = this.sound.add('catCuteSound5');
+        this.keyAlt.on('down', function(){
+            let n = Math.round(Math.random() * 4)
+            if(n==0){
+                catCuteSound1.play();
+            }else if(n==1){
+                catCuteSound2.play();
+            }else if(n==2){
+                catCuteSound3.play();
+            }else if(n==3){
+                catCuteSound4.play();
+            }else{
+                catCuteSound5.play();
+            }
+        });
+    }
+
     playerController(){
+        if(!this.player.body.touching.none){
+            this.OnLadder=false;
+        }
+
         if(this.keyShift.isDown){
             this.player.setVelocityX(0)
             if(this.anim != 4 && this.anim != 3){
@@ -170,7 +242,9 @@ export default class scene0 extends Phaser.Scene {
         }
 
 
-        if(this.keySpace.isDown && this.player.body.touching.down){
+        if(this.keySpace.isDown && this.playerOnLadder == true){
+            this.player.setVelocityY(-150);
+        }else if(this.keySpace.isDown && this.player.body.touching.down && this.playerOnLadder == false){
             this.player.setVelocityY(-300);
             let jumpSound= this.sound.add('jumpSound')
             jumpSound.play();
@@ -204,74 +278,36 @@ export default class scene0 extends Phaser.Scene {
     }
 
     create(){
-        this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-        this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-        this.keyShift = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
-        this.keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.keyAlt = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ALT);
-
-        this.sound.unlock();
-        let catCuteSound1 = this.sound.add('catCuteSound1');
-        let catCuteSound2 = this.sound.add('catCuteSound2');
-        let catCuteSound3 = this.sound.add('catCuteSound3');
-        let catCuteSound4 = this.sound.add('catCuteSound4');
-        let catCuteSound5 = this.sound.add('catCuteSound5');
-        this.keyAlt.on('down', function(){
-            let n = Math.round(Math.random() * 4)
-            if(n==0){
-                catCuteSound1.play();
-            }else if(n==1){
-                catCuteSound2.play();
-            }else if(n==2){
-                catCuteSound3.play();
-            }else if(n==3){
-                catCuteSound4.play();
-            }else{
-                catCuteSound5.play();
-            }
-        });
-
         this.physics.world.bounds.width = this.WORLD_WIDTH;
 
-        this.plants = this.physics.add.staticGroup();
-        this.plants.imovableY = true;
-
-        this.sky = this.physics.add.staticGroup();
-        this.sky.imovableY = true;
-        this.sky.create(0,300,'sky').setScale(this.skyScale);
+        this.ladder = this.physics.add.staticGroup();
+        this.ladder.imovable = true;
 
         this.platforms = this.physics.add.staticGroup();
         this.platforms.enableBody = true;
         this.platforms.imovable = true;
 
+        this.inizializeKeys();
+        this.inizializeCatCuteSound();
+
+        this.createSky();
+        this.createPlants();
+
         this.createIsland(0,this.SCENE_HEIGHT-this.itemsFrameSize,Math.ceil(this.SCENE_WIDTH/this.itemsFrameSize),this.itemsScale);
         this.createIsland(120,453,4,this.itemsScale);
         this.createIsland(360,381,7,this.itemsScale);
 
-        this.ladder = this.physics.add.staticGroup();
-        this.ladder.imovable = true;
-        this.platforms.enableBody = false;
-
         this.createLadder(84,552,3,this.itemsScale);
-
-
-        this.plants.create(326,552,'world',125).setScale(2);
-        this.plants.create(396,351,'world',127).setScale(2);
         
         this.createPlayer(50,532);
         this.createCamera();
 
-        this.plants = this.physics.add.staticGroup();
-        this.plants.imovableY = true;
-        this.platforms.enableBody = false;
-
-        this.plants.create(294,555,'world',124).setScale(2);
-
-        this.physics.add.collider(this.player, this.platforms);
-        this.physics.add.overlap(this.player, this.ladder);
+        this.addColliders();
     }
 
     update(){
+        this.ladderController();//Має бути на самому початку
+
         this.playerController();
         this.skysController();
     }
